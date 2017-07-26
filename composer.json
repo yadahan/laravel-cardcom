@@ -1,0 +1,33 @@
+{
+    "name": "yadahan/cardcom",
+    "description": "Laravel Cardcom",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Yaakov Dahan",
+            "email": "yakidehan@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.4",
+        "guzzlehttp/guzzle": "~6.0",
+        "illuminate/support": "~5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Yadahan\\Cardcom\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Yadahan\\Cardcom\\CardcomServiceProvider"
+            ],
+            "aliases": {
+                "Cardcom": "Yadahan\\Cardcom\\Facades\\Cardcom"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
