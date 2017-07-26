@@ -2,11 +2,11 @@
 
 ## Installation
 
-This package can be installed through Composer.
+> **Note:** Laravel Cardcom is currently in beta.
 
-``` bash
-composer require yadahan/cardcom
-```
+Laravel Cardcom requires Laravel 5.4 or higher, which is currently in beta, and PHP 7.1+. You may use Composer to install Laravel Cardcom into your Laravel project:
+
+    composer require yadahan/cardcom
 
 You must install this service provider.
 
@@ -32,7 +32,7 @@ This package also comes with a facade, which provides an easy way to call the th
 
 ## Contributing
 
-Thank you for considering contributing to the Cardcom.
+Thank you for considering contributing to the Laravel Cardcom.
 
 ## License
 
