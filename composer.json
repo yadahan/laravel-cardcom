@@ -27,7 +27,5 @@
                 "Cardcom": "Yadahan\\Cardcom\\Facades\\Cardcom"
             }
         }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    }
 }
