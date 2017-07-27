@@ -13,7 +13,11 @@ class CardcomServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->publishes([
+            __DIR__.'/../config/cardcom.php' => config_path('cardcom.php'),
+        ], 'cardcom-config');
+
+        $this->mergeConfigFrom(__DIR__.'/../config/cardcom.php', 'cardcom');
     }
 
     /**
@@ -24,7 +28,7 @@ class CardcomServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('cardcom', function () {
-            return new Cardcom();
+            return new Cardcom(config('cardcom.terminals.'.config('cardcom.terminal')));
         });
     }
 }

@@ -8,26 +8,54 @@ Laravel Cardcom requires Laravel 5.4 or higher, and PHP 7.1+. You may use Compos
 
     composer require yadahan/laravel-cardcom
 
-You must install this service provider.
+After installing Laravel Cardcom, publish its config using the `vendor:publish` Artisan command:
+
+    php artisan vendor:publish --tag="cardcom-config"
+
+### Configuration
+
+After installing the Laravel Cardcom library, register the `Yadahan\Cardcom\CardcomServiceProvider` in your `config/app.php` configuration file:
 
 ```php
-// config/app.php
 'providers' => [
-    ...
+    // Other service providers...
+
     Yadahan\Cardcom\CardcomServiceProvider::class,
-    ...
-];
+],
 ```
 
-This package also comes with a facade, which provides an easy way to call the the class.
+Also, add the `Cardcom` facade to the `aliases` array in your `app` configuration file:
 
 ```php
-// config/app.php
-'aliases' => [
-    ...
-    'Cardcom' => Yadahan\Cardcom\Facades\Cardcom::class,
-    ...
-];
+'Cardcom' => Yadahan\Cardcom\Facades\Cardcom::class,
+```
+
+You will also need to add credentials for your terminal. These credentials should be placed in your `config/cardcom.php` configuration file, For example:
+```php
+'terminals' => [
+    'default' => [
+        'terminal' => 1000,
+        'username' => 'card9611',
+        'api_name' => 'your-api-name',
+        'api_password' => 'your-api-password',
+    ]
+]
+```
+
+### Basic Usage
+
+Next, you are ready to charge credit card:
+
+```php
+Cardcom::card('4580000000000000', '01', '2020')->charge(10);
+```
+
+Of course you can config the terminal you want to use:
+
+```php
+Cardcom::config(config('cardcom.terminals.other'))->card('4580000000000000', '01', '2020')->charge(10);
+// Or
+Cardcom::config(['terminal' => '1000', 'username' => 'card9611'])->card('4580000000000000', '01', '2020')->charge(10);
 ```
 
 ## Contributing
