@@ -89,7 +89,7 @@ class Cardcom
     {
         $this->card['number'] = $number;
         $this->card['month'] = $month;
-        $this->card['year'] = $year;
+        $this->card['year'] = strlen($year) == 2 ? "20{$year}" : $year;
         $this->card['cvv'] = $cvv;
         $this->card['identity'] = $identity;
 
@@ -103,7 +103,7 @@ class Cardcom
      * @param  string  $currency
      * @return mixed
      */
-    public function charge($amount, $currency = 'ILS')
+    public function charge($amount, $currency = 'ILS', $payments = 1)
     {
         $client = new GuzzleHttp\Client();
 
@@ -113,6 +113,7 @@ class Cardcom
                 'username'          => $this->username,
                 'sum'               => $amount,
                 'CoinID'            => $this->currency($currency),
+                'NumOfPayments'     => $payments,
                 'Cardnumber'        => $this->card['number'],
                 'cardvaliditymonth' => $this->card['month'],
                 'cardvalidityyear'  => $this->card['year'],
@@ -125,16 +126,48 @@ class Cardcom
             'form_params' => $params,
         ]);
 
-        return $this->chargeRsponse($response->getBody());
+        return $this->rsponse('charge', $response->getBody());
     }
 
     /**
-     * Charge credit card response.
+     * Create token.
      *
+     * @param  array  $options
+     * @return mixed
+     */
+    public function createToken(array $options = [])
+    {
+        $client = new GuzzleHttp\Client();
+
+        if (is_array($this->card)) {
+            $params = [
+                'TerminalNumber'    => $this->terminal,
+                'username'          => $this->username,
+                'Cardnumber'        => $this->card['number'],
+                'cardvaliditymonth' => $this->card['month'],
+                'cardvalidityyear'  => $this->card['year'],
+                'Cvv'               => $this->card['cvv'],
+                'Identitynumber'    => $this->card['identity'],
+                'TokenExpireDate'   => $options['expires'] ?? $this->card['month'] . $this->card['year'],
+                'salt'              => $options['salt'] ?? null,
+            ];
+        }
+
+        $response = $client->request('POST', $this->url . 'Tokens.aspx', [
+            'form_params' => $params,
+        ]);
+
+        return $this->rsponse('token', $response->getBody());
+    }
+
+    /**
+     * Response.
+     *
+     * @param  string  $action
      * @param  string  $response
      * @return mixed
      */
-    public function chargeRsponse($response)
+    public function rsponse($action, $response)
     {
         $array = explode(';', $response);
 
@@ -142,11 +175,27 @@ class Cardcom
             return $response;
         }
 
-        $data = [
-            'code' => $array[0],
-            'message' => $array[2],
-            'transaction' => $array[1]
-        ];
+        switch ($action) {
+            case 'charge':
+                $data = [
+                    'code' => $array[0],
+                    'message' => $array[2],
+                    'transaction' => $array[1]
+                ];
+                break;
+
+            case 'token':
+                $data = [
+                    'code' => $array[0],
+                    'message' => $array[1],
+                    'token' => $array[2]
+                ];
+                break;
+
+            default:
+                throw new InvalidArgumentException("Unsupported action [{$action}].");
+                break;
+        }
 
         return $data;
     }

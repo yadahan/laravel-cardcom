@@ -45,10 +45,20 @@ You will also need to add credentials for your terminal. These credentials shoul
 
 ### Basic Usage
 
-You are ready to charge a credit card:
+Charge a credit card:
 
 ```php
 Cardcom::card('4580000000000000', '01', '2020')->charge(10, 'ILS');
+// With optional payments parameter
+Cardcom::card('4580000000000000', '01', '2020')->charge(10, 'ILS', 3);
+```
+
+Create a credit card token:
+
+```php
+Cardcom::card('4580000000000000', '01', '2020')->createToken();
+// With optional expiration date parameter
+Cardcom::card('4580000000000000', '01', '2020')->createToken(['expires' => 'MMYYYY']);
 ```
 
 Of course you can config the terminal you want to use:
