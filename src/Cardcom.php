@@ -3,6 +3,7 @@
 namespace Yadahan\Cardcom;
 
 use GuzzleHttp;
+use InvalidArgumentException;
 
 class Cardcom
 {
@@ -81,6 +82,7 @@ class Cardcom
      * @param  string  $month
      * @param  string  $year
      * @param  string  $cvv
+     * @param  string  $identity
      * @return $this
      */
     public function card($number, $month, $year, $cvv = null, $identity = null)
@@ -110,6 +112,7 @@ class Cardcom
                 'TerminalNumber'    => $this->terminal,
                 'username'          => $this->username,
                 'sum'               => $amount,
+                'CoinID'            => $this->currency($currency),
                 'Cardnumber'        => $this->card['number'],
                 'cardvaliditymonth' => $this->card['month'],
                 'cardvalidityyear'  => $this->card['year'],
@@ -146,5 +149,67 @@ class Cardcom
         ];
 
         return $data;
+    }
+
+    /**
+     * Cardcom currency supported.
+     * More information at http://kb.cardcom.co.il/article/AA-00247/0
+     *
+     * @param  string  $code
+     * @return int
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function currency($code)
+    {
+        switch (strtoupper($code)) {
+            case 'ILS':
+                return 1;
+                break;
+
+            case 'USD':
+                return 2;
+                break;
+
+            case 'AUD':
+                return 36;
+                break;
+
+            case 'CAD':
+                return 124;
+                break;
+
+            case 'DKK':
+                return 208;
+                break;
+
+            case 'JPY':
+                return 392;
+                break;
+
+            case 'NZD':
+                return 554;
+                break;
+
+            case 'RUB':
+                return 643;
+                break;
+
+            case 'CHF':
+                return 756;
+                break;
+
+            case 'GBP':
+                return 826;
+                break;
+
+            case 'EUR':
+                return 978;
+                break;
+
+            default:
+                throw new InvalidArgumentException("Unsupported currency [{$code}].");
+                break;
+        }
     }
 }
