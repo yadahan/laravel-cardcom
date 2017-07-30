@@ -25,10 +25,10 @@ return [
 
     'terminals' => [
         'default' => [
-            'terminal' => env('CARDCOM_TERMINAL'),
-            'username' => env('CARDCOM_USERNAME'),
-            'api_name' => env('CARDCOM_API_NAME'),
+            'terminal'     => env('CARDCOM_TERMINAL'),
+            'username'     => env('CARDCOM_USERNAME'),
+            'api_name'     => env('CARDCOM_API_NAME'),
             'api_password' => env('CARDCOM_API_PASSWORD'),
-        ]
-    ]
+        ],
+    ],
 ];
