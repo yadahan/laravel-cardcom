@@ -54,7 +54,7 @@ class Cardcom
      *
      * @param array $config
      */
-    function __construct(array $config)
+    public function __construct(array $config)
     {
         $this->config($config);
     }
@@ -62,7 +62,8 @@ class Cardcom
     /**
      * Set the Cardcom terminal.
      *
-     * @param  array  $config
+     * @param array $config
+     *
      * @return $this
      */
     public function config(array $config)
@@ -78,11 +79,12 @@ class Cardcom
     /**
      * Set the credit card.
      *
-     * @param  string  $number
-     * @param  string  $month
-     * @param  string  $year
-     * @param  string  $cvv
-     * @param  string  $identity
+     * @param string $number
+     * @param string $month
+     * @param string $year
+     * @param string $cvv
+     * @param string $identity
+     *
      * @return $this
      */
     public function card($number, $month, $year, $cvv = null, $identity = null)
@@ -99,8 +101,9 @@ class Cardcom
     /**
      * Charge given amount.
      *
-     * @param  int  $amount
-     * @param  string  $currency
+     * @param int    $amount
+     * @param string $currency
+     *
      * @return mixed
      */
     public function charge($amount, $currency = 'ILS', $payments = 1)
@@ -122,7 +125,7 @@ class Cardcom
             ];
         }
 
-        $response = $client->request('POST', $this->url . 'BillGoldPost2.aspx', [
+        $response = $client->request('POST', $this->url.'BillGoldPost2.aspx', [
             'form_params' => $params,
         ]);
 
@@ -132,7 +135,8 @@ class Cardcom
     /**
      * Create token.
      *
-     * @param  array  $options
+     * @param array $options
+     *
      * @return mixed
      */
     public function createToken(array $options = [])
@@ -148,12 +152,12 @@ class Cardcom
                 'cardvalidityyear'  => $this->card['year'],
                 'Cvv'               => $this->card['cvv'],
                 'Identitynumber'    => $this->card['identity'],
-                'TokenExpireDate'   => $options['expires'] ?? $this->card['month'] . $this->card['year'],
+                'TokenExpireDate'   => $options['expires'] ?? $this->card['month'].$this->card['year'],
                 'salt'              => $options['salt'] ?? null,
             ];
         }
 
-        $response = $client->request('POST', $this->url . 'Tokens.aspx', [
+        $response = $client->request('POST', $this->url.'Tokens.aspx', [
             'form_params' => $params,
         ]);
 
@@ -163,8 +167,9 @@ class Cardcom
     /**
      * Response.
      *
-     * @param  string  $action
-     * @param  string  $response
+     * @param string $action
+     * @param string $response
+     *
      * @return mixed
      */
     public function rsponse($action, $response)
@@ -178,17 +183,17 @@ class Cardcom
         switch ($action) {
             case 'charge':
                 $data = [
-                    'code' => $array[0],
-                    'message' => $array[2],
-                    'transaction' => $array[1]
+                    'code'        => $array[0],
+                    'message'     => $array[2],
+                    'transaction' => $array[1],
                 ];
                 break;
 
             case 'token':
                 $data = [
-                    'code' => $array[0],
+                    'code'    => $array[0],
                     'message' => $array[1],
-                    'token' => $array[2]
+                    'token'   => $array[2],
                 ];
                 break;
 
@@ -202,12 +207,13 @@ class Cardcom
 
     /**
      * Cardcom currency supported.
-     * More information at http://kb.cardcom.co.il/article/AA-00247/0
+     * More information at http://kb.cardcom.co.il/article/AA-00247/0.
      *
-     * @param  string  $code
-     * @return int
+     * @param string $code
      *
      * @throws \InvalidArgumentException
+     *
+     * @return int
      */
     public function currency($code)
     {
