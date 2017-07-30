@@ -1,8 +1,9 @@
 # Laravel Cardcom
 
-[![StyleCI](https://styleci.io/repos/98416118/shield?branch=master)](https://styleci.io/repos/98416118)
-[![Total Downloads](https://poser.pugx.org/yadahan/laravel-cardcom/downloads?format=flat-square)](https://packagist.org/packages/yadahan/laravel-cardcom)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/yadahan/laravel-cardcom/master/LICENSE)
+[![Build Status](https://travis-ci.org/yadahan/laravel-cardcom.svg?branch=master)](https://travis-ci.org/yadahan/laravel-cardcom)
+[![StyleCI](https://styleci.io/repos/98416118/shield?branch=master&style=flat)](https://styleci.io/repos/98416118)
+[![Total Downloads](https://poser.pugx.org/yadahan/laravel-cardcom/downloads?format=flat)](https://packagist.org/packages/yadahan/laravel-cardcom)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/yadahan/laravel-cardcom/master/LICENSE)
 
 ## Installation
 
