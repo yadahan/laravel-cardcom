@@ -58,6 +58,14 @@ Cardcom::card('4580000000000000', '01', '2020')->charge(10, 'ILS');
 Cardcom::card('4580000000000000', '01', '2020')->charge(10, 'ILS', 3);
 ```
 
+Refund a credit card:
+
+```php
+Cardcom::card('4580000000000000', '01', '2020')->refund(10, 'ILS');
+// With optional payments parameter
+Cardcom::card('4580000000000000', '01', '2020')->refund(10, 'ILS', 3);
+```
+
 Create a credit card token:
 
 ```php

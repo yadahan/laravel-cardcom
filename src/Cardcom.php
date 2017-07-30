@@ -103,6 +103,7 @@ class Cardcom
      *
      * @param int    $amount
      * @param string $currency
+     * @param string $payments
      *
      * @return mixed
      */
@@ -112,16 +113,16 @@ class Cardcom
 
         if (is_array($this->card)) {
             $params = [
-                'TerminalNumber'    => $this->terminal,
+                'terminalNumber'    => $this->terminal,
                 'username'          => $this->username,
                 'sum'               => $amount,
-                'CoinID'            => $this->currency($currency),
-                'NumOfPayments'     => $payments,
-                'Cardnumber'        => $this->card['number'],
-                'cardvaliditymonth' => $this->card['month'],
-                'cardvalidityyear'  => $this->card['year'],
-                'Cvv'               => $this->card['cvv'],
-                'Identitynumber'    => $this->card['identity'],
+                'coinId'            => $this->currency($currency),
+                'numOfPayments'     => $payments,
+                'cardNumber'        => $this->card['number'],
+                'cardValIdityMonth' => $this->card['month'],
+                'cardValIdityYear'  => $this->card['year'],
+                'cvv'               => $this->card['cvv'],
+                'identityNumber'    => $this->card['identity'],
             ];
         }
 
@@ -130,6 +131,43 @@ class Cardcom
         ]);
 
         return $this->rsponse('charge', $response->getBody());
+    }
+
+    /**
+     * Refund a credit card charge.
+     *
+     * @param int    $amount
+     * @param string $currency
+     * @param string $payments
+     *
+     * @return mixed
+     */
+    public function refund($amount, $currency = 'ILS', $payments = 1)
+    {
+        $client = new GuzzleHttp\Client();
+
+        if (is_array($this->card)) {
+            $params = [
+                'terminalNumber'    => $this->terminal,
+                'username'          => $this->apiName,
+                'userPassword'      => $this->apiPassword,
+                'dealType'          => '51',
+                'sum'               => $amount,
+                'coinId'            => $this->currency($currency),
+                'numOfPayments'     => $payments,
+                'cardNumber'        => $this->card['number'],
+                'cardValIdityMonth' => $this->card['month'],
+                'cardValIdityYear'  => $this->card['year'],
+                'cvv'               => $this->card['cvv'],
+                'identityNumber'    => $this->card['identity'],
+            ];
+        }
+
+        $response = $client->request('POST', $this->url.'BillGoldPost2.aspx', [
+            'form_params' => $params,
+        ]);
+
+        return $this->rsponse('refund', $response->getBody());
     }
 
     /**
@@ -145,15 +183,14 @@ class Cardcom
 
         if (is_array($this->card)) {
             $params = [
-                'TerminalNumber'    => $this->terminal,
+                'terminalNumber'    => $this->terminal,
                 'username'          => $this->username,
-                'Cardnumber'        => $this->card['number'],
-                'cardvaliditymonth' => $this->card['month'],
-                'cardvalidityyear'  => $this->card['year'],
-                'Cvv'               => $this->card['cvv'],
-                'Identitynumber'    => $this->card['identity'],
-                'TokenExpireDate'   => $options['expires'] ?? $this->card['month'].$this->card['year'],
-                'salt'              => $options['salt'] ?? null,
+                'cardNumber'        => $this->card['number'],
+                'cardValIdityMonth' => $this->card['month'],
+                'cardValIdityYear'  => $this->card['year'],
+                'cvv'               => $this->card['cvv'],
+                'identityNumber'    => $this->card['identity'],
+                'tokenExpireDate'   => $options['expires'] ?? $this->card['month'].$this->card['year'],
             ];
         }
 
@@ -182,6 +219,14 @@ class Cardcom
 
         switch ($action) {
             case 'charge':
+                $data = [
+                    'code'        => $array[0],
+                    'message'     => $array[2],
+                    'transaction' => $array[1],
+                ];
+                break;
+
+            case 'refund':
                 $data = [
                     'code'        => $array[0],
                     'message'     => $array[2],
