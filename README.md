@@ -4,13 +4,13 @@
 
 > **Note:** Laravel Cardcom is currently in beta.
 
-Laravel Cardcom requires Laravel 5.4 or higher, and PHP 7.1+. You may use Composer to install Laravel Cardcom into your Laravel project:
+Laravel Cardcom requires Laravel 5.4 or higher, and PHP 7.0+. You may use Composer to install Laravel Cardcom into your Laravel project:
 
     composer require yadahan/laravel-cardcom
 
 ### Configuration
 
-After installing the Laravel Cardcom library, register the `Yadahan\Cardcom\CardcomServiceProvider` in your `config/app.php` configuration file:
+After installing the Laravel Cardcom, register the `Yadahan\Cardcom\CardcomServiceProvider` in your `config/app.php` configuration file:
 
 ```php
 'providers' => [
@@ -35,8 +35,8 @@ You will also need to add credentials for your terminal. These credentials shoul
 ```php
 'terminals' => [
     'default' => [
-        'terminal' => 1000,
-        'username' => 'barak9611',
+        'terminal' => 'your-terminal',
+        'username' => 'your-username',
         'api_name' => 'your-api-name',
         'api_password' => 'your-api-password',
     ]

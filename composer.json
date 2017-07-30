@@ -1,6 +1,10 @@
 {
     "name": "yadahan/laravel-cardcom",
-    "description": "Laravel Cardcom",
+    "description": "Laravel Cardcom provides an expressive, fluent interface to Cardcom's billing services.",
+    "keywords": [
+        "laravel",
+        "cardcom"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -9,7 +13,7 @@
         }
     ],
     "require": {
-        "php": ">=7.1.0",
+        "php": ">=7.0",
         "guzzlehttp/guzzle": "~6.0",
         "illuminate/support": "~5.4"
     },
@@ -19,6 +23,9 @@
         }
     },
     "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        },
         "laravel": {
             "providers": [
                 "Yadahan\\Cardcom\\CardcomServiceProvider"
