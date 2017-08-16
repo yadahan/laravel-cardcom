@@ -227,7 +227,7 @@ class Cardcom
                     ];
 
                     foreach ($this->invoice['items'] as $key => $item) {
-                        $line = $key+1;
+                        $line = $key + 1;
 
                         $items["InvoiceLines{$line}.Description"] = $item['description'];
                         $items["InvoiceLines{$line}.Price"] = $item['price'];
