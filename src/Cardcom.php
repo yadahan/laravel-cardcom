@@ -12,7 +12,7 @@ class Cardcom
      *
      * @var string
      */
-    protected $url = 'https://secure.cardcom.co.il/';
+    protected $url = 'https://secure.cardcom.co.il';
 
     /**
      * The Cardcom terminal number.
@@ -63,7 +63,7 @@ class Cardcom
      */
     public function __construct(array $config)
     {
-        $this->config($config);
+        $this->setConfig($config);
     }
 
     /**
@@ -73,7 +73,7 @@ class Cardcom
      *
      * @return $this
      */
-    public function config(array $config)
+    public function setConfig(array $config)
     {
         $this->terminal = $config['terminal'];
         $this->username = $config['username'];
@@ -99,7 +99,7 @@ class Cardcom
         $this->card['type'] = 'card';
         $this->card['number'] = $number;
         $this->card['month'] = $month;
-        $this->card['year'] = strlen($year) == 2 ? "20{$year}" : $year;
+        $this->card['year'] = substr($year, -2);
         $this->card['cvv'] = $cvv;
         $this->card['identity'] = $identity;
 
@@ -109,22 +109,16 @@ class Cardcom
     /**
      * Set the token.
      *
-     * @param string $number
+     * @param string $token
      * @param string $month
      * @param string $year
-     * @param string $cvv
-     * @param string $identity
      *
      * @return $this
      */
-    public function token($number, $month, $year, $cvv = null, $identity = null)
+    public function token($token, $month, $year)
     {
+        $this->card($token, $month, $year);
         $this->card['type'] = 'token';
-        $this->card['number'] = $number;
-        $this->card['month'] = $month;
-        $this->card['year'] = strlen($year) == 2 ? "20{$year}" : $year;
-        $this->card['cvv'] = $cvv;
-        $this->card['identity'] = $identity;
 
         return $this;
     }
@@ -132,27 +126,27 @@ class Cardcom
     /**
      * Set the invoice.
      *
-     * @param array $options
+     * @param array $params
      *
      * @return $this
      */
-    public function invoice(array $options = [])
+    public function invoice(array $params)
     {
-        $this->invoice = $options;
+        $this->invoice = $params;
 
         return $this;
     }
 
     /**
-     * Set the item.
+     * Add invoice item.
      *
-     * @param array $options
+     * @param array $params
      *
      * @return $this
      */
-    public function item(array $options = [])
+    public function invoiceItem(array $params)
     {
-        $this->invoice['items'][] = $options;
+        $this->invoice['items'][] = $params;
 
         return $this;
     }
@@ -163,92 +157,72 @@ class Cardcom
      * @param int    $amount
      * @param string $currency
      * @param string $payments
+     * @param bool   $createToken
+     * @param string $approval
      *
      * @return mixed
      */
-    public function charge($amount, $currency = 'ILS', $payments = 1, $approval = null)
+    public function charge($amount, $currency = 'ILS', $payments = 1, $createToken = false, $approval = null)
     {
         $items = [];
         $invoice = [];
-        $client = new GuzzleHttp\Client();
+        $charge = [
+            'terminalNumber'    => $this->terminal,
+            'userName'          => $this->username,
+            'sum'               => $amount,
+            'coinId'            => $this->currency($currency),
+            'numOfPayments'     => $payments,
+            'cardValIdityMonth' => $this->card['month'],
+            'cardValIdityYear'  => $this->card['year'],
+            'identityNumber'    => $this->card['identity'],
+        ];
 
-        if (is_array($this->card)) {
-            if ($this->card['type'] === 'card') {
-                $charge = [
-                    'terminalNumber'    => $this->terminal,
-                    'username'          => $this->username,
-                    'sum'               => $amount,
-                    'coinId'            => $this->currency($currency),
-                    'numOfPayments'     => $payments,
-                    'cardNumber'        => $this->card['number'],
-                    'cardValIdityMonth' => $this->card['month'],
-                    'cardValIdityYear'  => $this->card['year'],
-                    'cvv'               => $this->card['cvv'],
-                    'identityNumber'    => $this->card['identity'],
-                ];
+        if ($this->card['type'] == 'token') {
+            $charge['token'] = $this->card['number'];
+        }
 
-                $url = 'BillGoldPost2.aspx';
-                $separator = ';';
-            } elseif ($this->card['type'] === 'token') {
-                $charge = [
-                    'terminalNumber'                  => $this->terminal,
-                    'username'                        => $this->username,
-                    'TokenToCharge.SumToBill'         => $amount,
-                    'TokenToCharge.CoinID'            => $this->currency($currency),
-                    'TokenToCharge.NumOfPayments'     => $payments,
-                    'TokenToCharge.Token'             => $this->card['number'],
-                    'TokenToCharge.CardValidityMonth' => $this->card['month'],
-                    'TokenToCharge.CardValidityYear'  => $this->card['year'],
-                    'TokenToCharge.ApprovalNumber'    => $approval,
-                    'TokenToCharge.IdentityNumber'    => $this->card['identity'],
-                ];
+        if ($this->card['type'] == 'card') {
+            $charge['cardNumber'] = $this->card['number'];
+            $charge['cvv'] = $this->card['cvv'];
+            $charge['createToken'] = $createToken;
+        }
 
-                if (!empty($this->invoice)) {
-                    $invoice = [
-                        'InvoiceHead.CustName'                  => $this->invoice['customer_name'],
-                        'InvoiceHead.SendByEmail'               => $this->invoice['send_email'] ?? 'true',
-                        'InvoiceHead.Language'                  => $this->invoice['invoice_language'] ?? 'he',
-                        'InvoiceHead.Email'                     => $this->invoice['email'] ?? null,
-                        'InvoiceHead.CustAddresLine1'           => $this->invoice['address_1'] ?? null,
-                        'InvoiceHead.CustAddresLine2'           => $this->invoice['address_2'] ?? null,
-                        'InvoiceHead.CustCity'                  => $this->invoice['city'] ?? null,
-                        'InvoiceHead.CustLinePH'                => $this->invoice['phone'] ?? null,
-                        'InvoiceHead.CustMobilePH'              => $this->invoice['mobile'] ?? null,
-                        'InvoiceHead.CompID'                    => $this->invoice['customer_id'] ?? null,
-                        'InvoiceHead.Comments'                  => $this->invoice['comments'] ?? null,
-                        'InvoiceHead.CoinID'                    => $this->currency($this->invoice['currency'] ?? $currency),
-                        'InvoiceHead.ExtIsVatFree'              => $this->invoice['vat_free'] ?? 'false',
-                        'InvoiceHead.ManualInvoiceNumber'       => $this->invoice['invoice_number'] ?? null,
-                        'InvoiceHead.IsAutoCreateUpdateAccount' => $this->invoice['account'] ?? 'true',
-                        'InvoiceHead.AccountForeignKey'         => $this->invoice['key'] ?? null,
-                        'InvoiceHead.Date'                      => $this->invoice['invoice_date'] ?? null,
-                        'InvoiceHead.DepartmentId'              => $this->invoice['department_id'] ?? null,
-                        'InvoiceHead.SiteUniqueId'              => $this->invoice['unique_id'] ?? null,
-                    ];
+        if ($approval) {
+            $charge['approvalNumber'] = $approval;
+        }
 
-                    foreach ($this->invoice['items'] as $key => $item) {
-                        $line = $key + 1;
+        if (! empty($this->invoice)) {
+            $invoice = [
+                'invCreateInvoice'   => true,
+                'invCusAddress1'     => $this->invoice['address_1'] ?? null,
+                'invCusAddress2'     => $this->invoice['address_2'] ?? null,
+                'invCusCity'         => $this->invoice['city'] ?? null,
+                'invDestEmail'       => $this->invoice['email'],
+                'invCustName'        => $this->invoice['customer_name'],
+                'InvCustLinePH'      => $this->invoice['phone'] ?? null,
+                'InvCustMobilePH'    => $this->invoice['mobile'] ?? null,
+                'InvComments'        => $this->invoice['comments'] ?? null,
+                'invLanguages'       => $this->invoice['invoice_language'] ?? 'he',
+                'InvNoVat'           => $this->invoice['no_vat'] ?? false,
+            ];
 
-                        $items["InvoiceLines{$line}.Description"] = $item['description'];
-                        $items["InvoiceLines{$line}.Price"] = $item['price'];
-                        $items["InvoiceLines{$line}.Quantity"] = $item['quantity'] ?? '1';
-                        $items["InvoiceLines{$line}.ProductID"] = $item['id'] ?? null;
-                        $items["InvoiceLines{$line}.IsVatFree"] = $item['vat_free'] ?? null;
-                    }
+            if (! isset($this->invoice['items']) || empty($this->invoice['items'])) {
+                $invoice['invItemDescription'] = $this->invoice['description'] ?? '';
+                $invoice['InvProductID'] = $this->invoice['product_id'] ?? null;
+            } else {
+                foreach ($this->invoice['items'] as $key => $item) {
+                    $line = $key == 0 ? '' : $key;
+
+                    $items["InvExtLine{$line}.Description"] = $item['description'];
+                    $items["InvExtLine{$line}.PriceIncludeVAT"] = $item['price'];
+                    $items["InvExtLine{$line}.Quantity"] = $item['quantity'] ?? '1';
+                    $items["InvExtLine{$line}.ProductID"] = $item['id'] ?? null;
+                    $items["InvExtLine{$line}.IsVatFree"] = $item['vat_free'] ?? false;
                 }
-
-                $url = 'interface/ChargeToken.aspx';
-                $separator = '&';
             }
         }
 
-        $params = array_merge($charge, $invoice, $items);
-
-        $response = $client->request('POST', $this->url.$url, [
-            'form_params' => $params,
-        ]);
-
-        return $this->rsponse('charge-'.$this->card['type'], $response->getBody(), $separator);
+        return $this->request(array_merge($charge, $invoice, $items));
     }
 
     /**
@@ -262,52 +236,68 @@ class Cardcom
      */
     public function refund($amount, $currency = 'ILS', $payments = 1)
     {
-        $client = new GuzzleHttp\Client();
+        if ($this->card['type'] === 'card') {
+            $params = [
+                'terminalNumber'    => $this->terminal,
+                'username'          => $this->apiName,
+                'userPassword'      => $this->apiPassword,
+                'dealType'          => '51',
+                'sum'               => $amount,
+                'coinId'            => $this->currency($currency),
+                'numOfPayments'     => $payments,
+                'cardNumber'        => $this->card['number'],
+                'cardValIdityMonth' => $this->card['month'],
+                'cardValIdityYear'  => $this->card['year'],
+                'cvv'               => $this->card['cvv'],
+                'identityNumber'    => $this->card['identity'],
+            ];
 
-        if (is_array($this->card)) {
-            if ($this->card['type'] === 'card') {
-                $params = [
-                    'terminalNumber'    => $this->terminal,
-                    'username'          => $this->apiName,
-                    'userPassword'      => $this->apiPassword,
-                    'dealType'          => '51',
-                    'sum'               => $amount,
-                    'coinId'            => $this->currency($currency),
-                    'numOfPayments'     => $payments,
-                    'cardNumber'        => $this->card['number'],
-                    'cardValIdityMonth' => $this->card['month'],
-                    'cardValIdityYear'  => $this->card['year'],
-                    'cvv'               => $this->card['cvv'],
-                    'identityNumber'    => $this->card['identity'],
-                ];
-
-                $url = 'BillGoldPost2.aspx';
-                $separator = ';';
-            } elseif ($this->card['type'] === 'token') {
-                $params = [
-                    'terminalNumber'                      => $this->terminal,
-                    'username'                            => $this->apiName,
-                    'TokenToCharge.UserPassword'          => $this->apiPassword,
-                    'TokenToCharge.RefundInsteadOfCharge' => 'True',
-                    'TokenToCharge.SumToBill'             => $amount,
-                    'TokenToCharge.CoinID'                => $this->currency($currency),
-                    'TokenToCharge.NumOfPayments'         => $payments,
-                    'TokenToCharge.Token'                 => $this->card['number'],
-                    'TokenToCharge.CardValidityMonth'     => $this->card['month'],
-                    'TokenToCharge.CardValidityYear'      => $this->card['year'],
-                    'TokenToCharge.IdentityNumber'        => $this->card['identity'],
-                ];
-
-                $url = 'interface/ChargeToken.aspx';
-                $separator = '&';
-            }
+            return $this->request($params, '/BillGoldPost2.aspx', ';');
         }
 
-        $response = $client->request('POST', $this->url.$url, [
-            'form_params' => $params,
-        ]);
+        if ($this->card['type'] === 'token') {
+            $params = [
+                'terminalNumber'                      => $this->terminal,
+                'username'                            => $this->apiName,
+                'tokenToCharge.userPassword'          => $this->apiPassword,
+                'tokenToCharge.refundInsteadOfCharge' => 'True',
+                'tokenToCharge.sumToBill'             => $amount,
+                'tokenToCharge.coinID'                => $this->currency($currency),
+                'tokenToCharge.numOfPayments'         => $payments,
+                'tokenToCharge.token'                 => $this->card['number'],
+                'tokenToCharge.cardValidityMonth'     => $this->card['month'],
+                'tokenToCharge.cardValidityYear'      => $this->card['year'],
+                'tokenToCharge.identityNumber'        => $this->card['identity'],
+            ];
 
-        return $this->rsponse('refund-'.$this->card['type'], $response->getBody(), $separator);
+            return $this->request($params, '/Interface/ChargeToken.aspx');
+        }
+    }
+
+    /**
+     * Cancel a transaction.
+     *
+     * @param int  $transaction
+     * @param bool $cancel
+     * @param bool $partial
+     *
+     * @return mixed
+     */
+    public function cancel($transaction, $cancel = false, $partial = 0)
+    {
+        $params = [
+            'terminalNumber'      => $this->terminal,
+            'name'                => $this->apiName,
+            'pass'                => $this->apiPassword,
+            'internalDealNumber'  => $transaction,
+            'cancelOnly'          => $cancel,
+        ];
+
+        if ($partial) {
+            $params['partialSum'] = $partial;
+        }
+
+        return $this->request($params, '/Interface/CancelDeal.aspx');
     }
 
     /**
@@ -317,28 +307,20 @@ class Cardcom
      *
      * @return mixed
      */
-    public function createToken(array $options = [])
+    public function createToken()
     {
-        $client = new GuzzleHttp\Client();
+        $params = [
+            'terminalNumber'    => $this->terminal,
+            'username'          => $this->username,
+            'cardNumber'        => $this->card['number'],
+            'cardValidityMonth' => $this->card['month'],
+            'cardValidityYear'  => $this->card['year'],
+            'cvv'               => $this->card['cvv'],
+            'identityNumber'    => $this->card['identity'],
+            'createToken'       => true,
+        ];
 
-        if (is_array($this->card)) {
-            $params = [
-                'terminalNumber'    => $this->terminal,
-                'username'          => $this->username,
-                'cardNumber'        => $this->card['number'],
-                'cardValIdityMonth' => $this->card['month'],
-                'cardValIdityYear'  => $this->card['year'],
-                'cvv'               => $this->card['cvv'],
-                'identityNumber'    => $this->card['identity'],
-                'tokenExpireDate'   => $options['expires'] ?? $this->card['month'].$this->card['year'],
-            ];
-        }
-
-        $response = $client->request('POST', $this->url.'Tokens.aspx', [
-            'form_params' => $params,
-        ]);
-
-        return $this->rsponse('create-token', $response->getBody());
+        return $this->request($params);
     }
 
     /**
@@ -346,36 +328,61 @@ class Cardcom
      *
      * @param int    $amount
      * @param string $currency
-     * @param string $payments
-     * @param string $check
+     * @param int    $payments
+     * @param int    $check
+     * @param bool   $createToken
      *
      * @return mixed
      */
-    public function suspend($amount, $currency = 'ILS', $payments = 1, $check = 'J5')
+    public function suspend($amount, $currency = 'ILS', $payments = 1, $check = 5, $createToken = true)
+    {
+        $params = [
+            'terminalNumber'    => $this->terminal,
+            'username'          => $this->username,
+            'jParameter'        => $check,
+            'sum'               => $amount,
+            'coinId'            => $this->currency($currency),
+            'cardNumber'        => $this->card['number'],
+            'cardValidityMonth' => $this->card['month'],
+            'cardValidityYear'  => $this->card['year'],
+            'cvv'               => $this->card['cvv'],
+            'identityNumber'    => $this->card['identity'],
+            'createToken'       => $createToken,
+        ];
+
+        return $this->request($params);
+    }
+
+    /**
+     * Charge suspended transaction.
+     *
+     * @param int $transaction
+     *
+     * @return mixed
+     */
+    public function chargeSuspended($approval, $amount, $currency = 'ILS', $payments = 1)
+    {
+        return $this->charge($amount, $currency, $payments, $createToken = false, $approval);
+    }
+
+    /**
+     * Request.
+     *
+     * @param array  $params
+     * @param string $path
+     * @param string $separator
+     *
+     * @return mixed
+     */
+    protected function request($params, $path = '/Interface/Direct.aspx', $separator = '&')
     {
         $client = new GuzzleHttp\Client();
 
-        if (is_array($this->card)) {
-            $params = [
-                'terminalNumber'    => $this->terminal,
-                'username'          => $this->username,
-                'sum'               => $amount,
-                'coinId'            => $this->currency($currency),
-                'numOfPayments'     => $payments,
-                'cardNumber'        => $this->card['number'],
-                'cardValIdityMonth' => $this->card['month'],
-                'cardValIdityYear'  => $this->card['year'],
-                'cvv'               => $this->card['cvv'],
-                'identityNumber'    => $this->card['identity'],
-                'checkType'         => $check,
-            ];
-        }
-
-        $response = $client->request('POST', $this->url.'SuspendedDealDeposit.aspx', [
+        $response = $client->request('POST', $this->url.$path, [
             'form_params' => $params,
         ]);
 
-        return $this->rsponse('suspend', $response->getBody());
+        return $this->response($response->getBody(), $separator);
     }
 
     /**
@@ -386,81 +393,50 @@ class Cardcom
      *
      * @return mixed
      */
-    public function rsponse($action, $response, $separator = ';')
+    public function response($response, $separator = '&')
     {
-        $array = explode($separator, $response);
+        if ($separator == '&') {
+            parse_str($response, $array);
 
-        if (!is_array($array)) {
+            $data = [
+                'code'        => $array['ResponseCode'],
+                'message'     => $array['Description'],
+                'transaction' => $array['InternalDealNumber'],
+            ];
+        }
+
+        if ($separator == ';') {
+            $array = explode($separator, $response);
+
+            $data = [
+                'code'        => $array[0],
+                'message'     => $array[2],
+                'transaction' => $array[1],
+            ];
+        }
+
+        if (! is_array($array)) {
             return $response;
         }
 
-        switch ($action) {
-            case 'charge-card':
-                $data = [
-                    'code'        => $array[0],
-                    'message'     => $array[2],
-                    'transaction' => $array[1],
-                ];
-                break;
-
-            case 'charge-token':
-                $data = [
-                    'code'        => explode('=', $array[0])[1],
-                    'message'     => explode('=', $array[1])[1],
-                    'transaction' => explode('=', $array[2])[1],
-                    'approval'    => explode('=', $array[7])[1],
-                    'invoice'     => [
-                        'code'        => explode('=', $array[3])[1],
-                        'message'     => explode('=', $array[4])[1],
-                        'number'      => explode('=', $array[5])[1],
-                        'type'        => explode('=', $array[6])[1],
-                    ],
-                ];
-                break;
-
-            case 'refund-card':
-                $data = [
-                    'code'        => $array[0],
-                    'message'     => $array[2],
-                    'transaction' => $array[1],
-                ];
-                break;
-
-            case 'refund-token':
-                $data = [
-                    'code'        => explode('=', $array[0])[1],
-                    'message'     => explode('=', $array[1])[1],
-                    'transaction' => explode('=', $array[2])[1],
-                    'approval'    => explode('=', $array[7])[1],
-                    'invoice'     => [
-                        'code'        => explode('=', $array[3])[1],
-                        'message'     => explode('=', $array[4])[1],
-                        'number'      => explode('=', $array[5])[1],
-                        'type'        => explode('=', $array[6])[1],
-                    ],
-                ];
-                break;
-
-            case 'create-token':
-                $data = [
-                    'code'    => $array[0],
-                    'message' => $array[1],
-                    'token'   => $array[2],
-                ];
-                break;
-
-            case 'suspend':
-                $data = [
-                    'code'        => $array[0],
-                    'message'     => $array[2],
-                    'transaction' => $array[1],
-                ];
-                break;
-
-            default:
-                throw new InvalidArgumentException("Unsupported action [{$action}].");
-                break;
+        if (isset($array['Token'])) {
+            $data['token'] = $array['Token'];
         }
+
+        if (isset($array['ApprovalNumber'])) {
+            $data['approval'] = $array['ApprovalNumber'];
+        }
+
+        if (isset($array['InvoiceResponse_ResponseCode'])) {
+            $data['invoice'] = [
+                'code'    => $array['InvoiceResponse_ResponseCode'],
+                'message' => $array['InvoiceResponse_Description'],
+                'number'  => $array['InvoiceResponse_InvoiceNumber'],
+                'type'    => $array['InvoiceResponse_InvoiceType'],
+            ];
+        }
+
+        $data['payload'] = $array;
 
         return $data;
     }
@@ -477,54 +453,26 @@ class Cardcom
      */
     public function currency($code)
     {
-        switch (strtoupper($code)) {
-            case 'ILS':
-                return 1;
-                break;
+        $currency = strtoupper($code);
 
-            case 'USD':
-                return 2;
-                break;
+        $currencies = [
+            'ILS' => 1,
+            'USD' => 2,
+            'AUD' => 36,
+            'CAD' => 124,
+            'DKK' => 208,
+            'JPY' => 392,
+            'NZD' => 554,
+            'RUB' => 643,
+            'CHF' => 756,
+            'GBP' => 826,
+            'EUR' => 978
+        ];
 
-            case 'AUD':
-                return 36;
-                break;
-
-            case 'CAD':
-                return 124;
-                break;
-
-            case 'DKK':
-                return 208;
-                break;
-
-            case 'JPY':
-                return 392;
-                break;
-
-            case 'NZD':
-                return 554;
-                break;
-
-            case 'RUB':
-                return 643;
-                break;
-
-            case 'CHF':
-                return 756;
-                break;
-
-            case 'GBP':
-                return 826;
-                break;
-
-            case 'EUR':
-                return 978;
-                break;
-
-            default:
-                throw new InvalidArgumentException("Unsupported currency [{$code}].");
-                break;
+        if (! isset($currencies[$currency])) {
+            throw new InvalidArgumentException("Unsupported currency [{$code}].");
         }
+
+        return $currencies[$currency];
     }
 }

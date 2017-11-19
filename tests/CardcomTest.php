@@ -1,7 +1,7 @@
 <?php
 
-use Orchestra\Testbench\TestCase;
 use Yadahan\Cardcom\Cardcom;
+use Orchestra\Testbench\TestCase;
 
 class CardcomTest extends TestCase
 {
@@ -17,7 +17,7 @@ class CardcomTest extends TestCase
             'username' => $this->username,
         ]);
 
-        $response = $cardcom->card('4580000000000000', '01', '2020')->charge(10, 'ILS');
+        $response = $cardcom->card('4580000000000000', '01', '2020')->charge(15, 'ILS');
 
         $this->assertEquals('0', $response['code']);
     }
@@ -62,6 +62,42 @@ class CardcomTest extends TestCase
         $this->assertEquals('0', $response['code']);
     }
 
+    public function test_cancel_transaction()
+    {
+        $cardcom = new Cardcom([
+            'terminal' => $this->terminal,
+            'username' => $this->username,
+            'api_name'     => $this->apiName,
+            'api_password' => $this->apiPassword,
+        ]);
+
+        $transaction = $cardcom->card('4580000000000000', '01', '2020')->charge(15, 'ILS');
+
+        $this->assertEquals('0', $transaction['code']);
+
+        $response = $cardcom->cancel($transaction['transaction'], true);
+
+        $this->assertEquals('0', $response['code']);
+    }
+
+    public function test_refund_transaction()
+    {
+        $cardcom = new Cardcom([
+            'terminal' => $this->terminal,
+            'username' => $this->username,
+            'api_name'     => $this->apiName,
+            'api_password' => $this->apiPassword,
+        ]);
+
+        $transaction = $cardcom->card('4580000000000000', '01', '2020')->charge(15, 'ILS');
+
+        $this->assertEquals('0', $transaction['code']);
+
+        $response = $cardcom->cancel($transaction['transaction'], false, 10);
+
+        $this->assertEquals('0', $response['code']);
+    }
+
     public function test_create_card_token()
     {
         $cardcom = new Cardcom([
@@ -76,20 +112,6 @@ class CardcomTest extends TestCase
         $this->assertEquals('0', $response['code']);
     }
 
-    public function test_create_card_token_with_expires()
-    {
-        $cardcom = new Cardcom([
-            'terminal'     => $this->terminal,
-            'username'     => $this->username,
-            'api_name'     => $this->apiName,
-            'api_password' => $this->apiPassword,
-        ]);
-
-        $response = $cardcom->card('4580000000000000', '01', '2020')->createToken(['expires' => '012020']);
-
-        $this->assertEquals('0', $response['code']);
-    }
-
     public function test_charge_token()
     {
         $cardcom = new Cardcom([
@@ -97,9 +119,11 @@ class CardcomTest extends TestCase
             'username' => $this->username,
         ]);
 
-        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken()['token'];
+        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken();
 
-        $response = $cardcom->token($token, '01', '2020')->charge(10, 'ILS');
+        $this->assertEquals('0', $token['code']);
+
+        $response = $cardcom->token($token['token'], '01', '2020')->charge(10, 'ILS');
 
         $this->assertEquals('0', $response['code']);
     }
@@ -111,9 +135,11 @@ class CardcomTest extends TestCase
             'username' => $this->username,
         ]);
 
-        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken()['token'];
+        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken();
 
-        $response = $cardcom->token($token, '01', '2020')->charge(10, 'ILS', 3);
+        $this->assertEquals('0', $token['code']);
+
+        $response = $cardcom->token($token['token'], '01', '2020')->charge(10, 'ILS', 3);
 
         $this->assertEquals('0', $response['code']);
     }
@@ -127,9 +153,11 @@ class CardcomTest extends TestCase
             'api_password' => $this->apiPassword,
         ]);
 
-        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken()['token'];
+        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken();
 
-        $response = $cardcom->token($token, '01', '2020')->refund(10, 'ILS');
+        $this->assertEquals('0', $token['code']);
+
+        $response = $cardcom->token($token['token'], '01', '2020')->refund(10, 'ILS');
 
         $this->assertEquals('0', $response['code']);
     }
@@ -143,9 +171,11 @@ class CardcomTest extends TestCase
             'api_password' => $this->apiPassword,
         ]);
 
-        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken()['token'];
+        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken();
 
-        $response = $cardcom->token($token, '01', '2020')->refund(10, 'ILS', 3);
+        $this->assertEquals('0', $token['code']);
+
+        $response = $cardcom->token($token['token'], '01', '2020')->refund(10, 'ILS', 3);
 
         $this->assertEquals('0', $response['code']);
     }
@@ -157,9 +187,11 @@ class CardcomTest extends TestCase
             'username' => $this->username,
         ]);
 
-        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken()['token'];
+        $token = $cardcom->card('4580000000000000', '01', '2020')->createToken();
 
-        $response = $cardcom->token($token, '01', '2020')
+        $this->assertEquals('0', $token['code']);
+
+        $response = $cardcom->token($token['token'], '01', '2020')
                     ->invoice([
                         'customer_name'    => 'Test Test',
                         'send_email'       => 'true',
@@ -177,14 +209,14 @@ class CardcomTest extends TestCase
                         'account'          => 'true',
                         'key'              => '1',
                     ])
-                    ->item([
+                    ->invoiceItem([
                         'description' => 'Test Product 1',
                         'price'       => '5',
                         'quantity'    => '1',
                         'id'          => '1',
                         'vat_free'    => 'true',
                     ])
-                    ->item([
+                    ->invoiceItem([
                         'description' => 'Test Product 2',
                         'price'       => '5',
                         'quantity'    => '1',
@@ -196,17 +228,33 @@ class CardcomTest extends TestCase
         $this->assertEquals('0', $response['invoice']['code']);
     }
 
-    // public function test_create_suspended_transaction()
-    // {
-    //     $cardcom = new Cardcom([
-    //         'terminal' => $this->terminal,
-    //         'username' => $this->username,
-    //     ]);
+    public function test_create_suspended_transaction()
+    {
+        $cardcom = new Cardcom([
+            'terminal' => $this->terminal,
+            'username' => $this->username,
+        ]);
 
-    //     $response = $cardcom->card('4580000000000000', '01', '2020')->suspend(10, 'ILS');
+        $response = $cardcom->card('4580000000000000', '01', '2020')->suspend(10, 'ILS');
 
-    //     $this->assertEquals('0', $response['code']);
-    // }
+        $this->assertEquals('0', $response['code']);
+    }
+
+    public function test_charge_suspended_transaction()
+    {
+        $cardcom = new Cardcom([
+            'terminal' => $this->terminal,
+            'username' => $this->username,
+        ]);
+
+        $suspended = $cardcom->card('4580000000000000', '01', '2020')->suspend(10, 'ILS');
+
+        $this->assertEquals('0', $suspended['code']);
+
+        $response = $cardcom->token($suspended['token'], '01', '2020')->chargeSuspended($suspended['approval'], 10, 'ILS');
+
+        $this->assertEquals('0', $response['code']);
+    }
 
     public function test_config_terminal()
     {
@@ -215,7 +263,7 @@ class CardcomTest extends TestCase
             'username' => $this->username,
         ]);
 
-        $response = $cardcom->config(['terminal' => '100', 'username' => 'card9611'])->card('4580000000000000', '01', '2020')->charge(10, 'ILS');
+        $response = $cardcom->setConfig(['terminal' => '100', 'username' => 'card9611'])->card('4580000000000000', '01', '2020')->charge(10, 'ILS');
 
         $this->assertEquals('501', $response['code']);
     }

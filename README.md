@@ -15,7 +15,9 @@ Laravel Cardcom requires Laravel 5.4 or higher, and PHP 7.0+. You may use Compos
 
 ### Configuration
 
-After installing the Laravel Cardcom, register the `Yadahan\Cardcom\CardcomServiceProvider` in your `config/app.php` configuration file:
+Laravel 5.5 and higher the service provider and facade will automatically get registered.
+
+In Laravel 5.4, after installing the Laravel Cardcom, register the `Yadahan\Cardcom\CardcomServiceProvider` in your `config/app.php` configuration file:
 
 ```php
 'providers' => [
@@ -66,20 +68,36 @@ Cardcom::card('4580000000000000', '01', '2020')->refund(10, 'ILS');
 Cardcom::card('4580000000000000', '01', '2020')->refund(10, 'ILS', 3);
 ```
 
+Cancel a transaction:
+
+```php
+// The first (required) parameter is the transaction number
+// The second (optional, default false) parameter, is cancel or refund transaction
+Cardcom::cancel('12345678', true);
+// With optional pertialy amount parameter (The second parameter must be false)
+Cardcom::cancel('12345678', false, 10);
+```
+
 Create a credit card token:
 
 ```php
 Cardcom::card('4580000000000000', '01', '2020')->createToken();
-// With optional expiration date parameter
-Cardcom::card('4580000000000000', '01', '2020')->createToken(['expires' => 'MMYYYY']);
+```
+
+Create and charge a credit card token:
+
+```php
+$response = Cardcom::card('4580000000000000', '01', '2020')->createToken();
+
+Cardcom::token($response['token'], '01', '2020')->charge(10, 'ILS');
 ```
 
 Of course you can config the terminal you want to use:
 
 ```php
-Cardcom::config(config('cardcom.terminals.other'))->card('4580000000000000', '01', '2020')->charge(10, 'ILS');
+Cardcom::setConfig(config('cardcom.terminals.other'))->card('4580000000000000', '01', '2020')->charge(10, 'ILS');
 // Or
-Cardcom::config(['terminal' => '1000', 'username' => 'barak9611'])->card('4580000000000000', '01', '2020')->charge(10, 'ILS');
+Cardcom::setConfig(['terminal' => '1000', 'username' => 'barak9611'])->card('4580000000000000', '01', '2020')->charge(10, 'ILS');
 ```
 
 ## Contributing
