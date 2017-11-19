@@ -191,7 +191,7 @@ class Cardcom
             $charge['approvalNumber'] = $approval;
         }
 
-        if (! empty($this->invoice)) {
+        if (!empty($this->invoice)) {
             $invoice = [
                 'invCreateInvoice'   => true,
                 'invCusAddress1'     => $this->invoice['address_1'] ?? null,
@@ -206,7 +206,7 @@ class Cardcom
                 'InvNoVat'           => $this->invoice['no_vat'] ?? false,
             ];
 
-            if (! isset($this->invoice['items']) || empty($this->invoice['items'])) {
+            if (!isset($this->invoice['items']) || empty($this->invoice['items'])) {
                 $invoice['invItemDescription'] = $this->invoice['description'] ?? '';
                 $invoice['InvProductID'] = $this->invoice['product_id'] ?? null;
             } else {
@@ -415,7 +415,7 @@ class Cardcom
             ];
         }
 
-        if (! is_array($array)) {
+        if (!is_array($array)) {
             return $response;
         }
 
@@ -466,10 +466,10 @@ class Cardcom
             'RUB' => 643,
             'CHF' => 756,
             'GBP' => 826,
-            'EUR' => 978
+            'EUR' => 978,
         ];
 
-        if (! isset($currencies[$currency])) {
+        if (!isset($currencies[$currency])) {
             throw new InvalidArgumentException("Unsupported currency [{$code}].");
         }
 

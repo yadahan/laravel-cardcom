@@ -1,7 +1,7 @@
 <?php
 
-use Yadahan\Cardcom\Cardcom;
 use Orchestra\Testbench\TestCase;
+use Yadahan\Cardcom\Cardcom;
 
 class CardcomTest extends TestCase
 {
@@ -65,8 +65,8 @@ class CardcomTest extends TestCase
     public function test_cancel_transaction()
     {
         $cardcom = new Cardcom([
-            'terminal' => $this->terminal,
-            'username' => $this->username,
+            'terminal'     => $this->terminal,
+            'username'     => $this->username,
             'api_name'     => $this->apiName,
             'api_password' => $this->apiPassword,
         ]);
@@ -83,8 +83,8 @@ class CardcomTest extends TestCase
     public function test_refund_transaction()
     {
         $cardcom = new Cardcom([
-            'terminal' => $this->terminal,
-            'username' => $this->username,
+            'terminal'     => $this->terminal,
+            'username'     => $this->username,
             'api_name'     => $this->apiName,
             'api_password' => $this->apiPassword,
         ]);
