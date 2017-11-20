@@ -92,6 +92,36 @@ $response = Cardcom::card('4580000000000000', '01', '2020')->createToken();
 Cardcom::token($response['token'], '01', '2020')->charge(10, 'ILS');
 ```
 
+Charge and create invoice
+
+```php
+Cardcom::card('4580000000000000', '01', '2020')->charge(10, 'ILS')
+    ->invoice([
+        'customer_name'    => 'Test Test',
+        'send_email'       => 'true',
+        'invoice_language' => 'he',
+        'email'            => 'test@test.com',
+        'address_1'        => 'Address line 1',
+        'address_2'        => 'Address line 2',
+        'city'             => 'Test city',
+        'phone'            => '031234567',
+        'mobile'           => '0501234567',
+        'customer_id'      => '1',
+        'comments'         => 'Test comments',
+        'currency'         => 'ILS',
+        'vat_free'         => 'false',
+        'account'          => 'true',
+        'key'              => '1',
+    ])
+    ->invoiceItem([
+        'description' => 'Test Product 1',
+        'price'       => '10',
+        'quantity'    => '1',
+        'id'          => '1',
+        'vat_free'    => 'false',
+    ]);
+```
+
 Of course you can config the terminal you want to use:
 
 ```php
