@@ -194,7 +194,7 @@ class Cardcom
         if (!empty($this->invoice)) {
             $invoice = [
                 'invCreateInvoice'   => true,
-                'invcusid'       => $this->invoice['identity'] ?? null,
+                'invcusid'           => $this->invoice['identity'] ?? null,
                 'Invcustnumber'      => $this->invoice['customer_id'] ?? null,
                 'dealidentitycode'   => $this->invoice['identity'] ?? null,
                 'invCusAddress1'     => $this->invoice['address_1'] ?? null,
@@ -383,14 +383,14 @@ class Cardcom
     {
         $auth = [
             'userName'     => $this->apiName,
-            'userPassword' => $this->apiPassword
+            'userPassword' => $this->apiPassword,
         ];
 
         if ($pdf) {
             $params = [
                 'documentNumber' => $number,
                 'documentType'   => $type,
-                'isOriginal'     => $origin
+                'isOriginal'     => $origin,
             ];
 
             $path = '/Interface/GetDocumentPDF.aspx';
@@ -398,7 +398,7 @@ class Cardcom
             $params = [
                 'invoiceNumber' => $number,
                 'invoiceType'   => $type,
-                'getAsOriginal' => $origin
+                'getAsOriginal' => $origin,
             ];
 
             $path = '/Interface/InvoiceGetHtml.aspx';
