@@ -194,6 +194,9 @@ class Cardcom
         if (!empty($this->invoice)) {
             $invoice = [
                 'invCreateInvoice'   => true,
+                'invcusid'       => $this->invoice['identity'] ?? null,
+                'Invcustnumber'      => $this->invoice['customer_id'] ?? null,
+                'dealidentitycode'   => $this->invoice['identity'] ?? null,
                 'invCusAddress1'     => $this->invoice['address_1'] ?? null,
                 'invCusAddress2'     => $this->invoice['address_2'] ?? null,
                 'invCusCity'         => $this->invoice['city'] ?? null,
@@ -203,6 +206,7 @@ class Cardcom
                 'InvCustMobilePH'    => $this->invoice['mobile'] ?? null,
                 'InvComments'        => $this->invoice['comments'] ?? null,
                 'invLanguages'       => $this->invoice['invoice_language'] ?? 'he',
+                'languages'          => $this->invoice['invoice_language'] ?? 'he',
                 'InvNoVat'           => $this->invoice['no_vat'] ?? false,
             ];
 
@@ -366,6 +370,50 @@ class Cardcom
     }
 
     /**
+     * Get invoice.
+     *
+     * @param int  $number
+     * @param bool $pdf
+     * @param int  $type
+     * @param bool $origin
+     *
+     * @return mixed
+     */
+    public function getInvoice($number, $pdf = false, $type = 1, $origin = false)
+    {
+        $auth = [
+            'userName'     => $this->apiName,
+            'userPassword' => $this->apiPassword
+        ];
+
+        if ($pdf) {
+            $params = [
+                'documentNumber' => $number,
+                'documentType'   => $type,
+                'isOriginal'     => $origin
+            ];
+
+            $path = '/Interface/GetDocumentPDF.aspx';
+        } else {
+            $params = [
+                'invoiceNumber' => $number,
+                'invoiceType'   => $type,
+                'getAsOriginal' => $origin
+            ];
+
+            $path = '/Interface/InvoiceGetHtml.aspx';
+        }
+
+        $client = new GuzzleHttp\Client();
+
+        $response = $client->request('POST', $this->url.$path, [
+            'form_params' => array_merge($auth, $params),
+        ]);
+
+        return $response->getBody();
+    }
+
+    /**
      * Request.
      *
      * @param array  $params
@@ -374,7 +422,7 @@ class Cardcom
      *
      * @return mixed
      */
-    protected function request($params, $path = '/Interface/Direct.aspx', $separator = '&')
+    protected function request($params, $path = '/Interface/Direct2.aspx', $separator = '&')
     {
         $client = new GuzzleHttp\Client();
 
